@@ -1,14 +1,13 @@
-package com.veatch_tutic.crashrecorder.gyroscope
+package com.veatch_tutic.crashrecorder.accelerometer
 
 import android.os.Handler
 import com.veatch_tutic.crashrecorder.video_streaming.VideoStreamingThread
 
-class GyroscopeThread(private val messageHandler: Handler) : Thread() {
+class AccelerometerThread(private val messageHandler: Handler) : Thread() {
 
     override fun run() {
-        super.run()
-
-        // run and monitor the gyroscope thread
+        System.out.println("Accelerometer Thread running")
+        // run and monitor the accelerometer thread
 
         // on trigger of crash detection, pass message to messageHandler
         messageHandler.sendEmptyMessage(VideoStreamingThread.MESSAGE_CODE)
