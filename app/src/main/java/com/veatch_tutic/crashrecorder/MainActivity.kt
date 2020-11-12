@@ -11,7 +11,6 @@ import com.veatch_tutic.crashrecorder.video_streaming.VideoStreamingThread.Video
 
 class MainActivity : AppCompatActivity() {
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)

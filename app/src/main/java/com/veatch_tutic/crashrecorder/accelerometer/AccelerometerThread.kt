@@ -6,13 +6,14 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Handler
 import com.veatch_tutic.crashrecorder.video_streaming.VideoStreamingThread
-import kotlin.math.abs
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 class AccelerometerThread(
     private val messageHandler: Handler,
     private val sensorManager: SensorManager
 ) : Thread(), SensorEventListener {
-    val CRASH_DETECTION_THRESHOLD = 5.0
+    val CRASH_DETECTION_THRESHOLD = 16
 
     override fun run() {
         System.out.println("Accelerometer Thread running")
@@ -33,10 +34,14 @@ class AccelerometerThread(
     override fun onSensorChanged(event: SensorEvent) {
         System.out.println("sensor changed")
 
-        val gravity = floatArrayOf()
-        val linearAcceleration = floatArrayOf()
+        val gravity = FloatArray(3)
+        val linearAcceleration = DoubleArray(3)
 
         val alpha = 0.8f
+
+        if (event.values.size < 3) {
+            return
+        }
 
         // Isolate the force of gravity with the low-pass filter.
         gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0]
@@ -44,11 +49,15 @@ class AccelerometerThread(
         gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2]
 
         // Remove the gravity contribution with the high-pass filter.
-        linearAcceleration[0] = event.values[0] - gravity[0]
-        linearAcceleration[1] = event.values[1] - gravity[1]
-        linearAcceleration[2] = event.values[2] - gravity[2]
+        linearAcceleration[0] = (event.values[0] - gravity[0]).toDouble()
+        linearAcceleration[1] = (event.values[1] - gravity[1]).toDouble()
+        linearAcceleration[2] = (event.values[2] - gravity[2]).toDouble()
 
-        val accelerationForce = abs(linearAcceleration[0]) + abs(linearAcceleration[1]) + abs(linearAcceleration[2])
+        val accelerationForce = sqrt(
+            linearAcceleration[0].pow(2.0) + linearAcceleration[1].pow(2.0) + linearAcceleration[2].pow(
+                2.0
+            )
+        )
 
         if (accelerationForce >= CRASH_DETECTION_THRESHOLD) {
             messageHandler.sendEmptyMessage(VideoStreamingThread.MESSAGE_CODE)
