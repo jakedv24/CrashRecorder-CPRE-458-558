@@ -40,26 +40,17 @@ class MainActivity : AppCompatActivity() {
         val videoStreamingThread = VideoStreamingThread(videoThreadReadyCallback)
         videoStreamingThread.start()
 
-        val ft: FragmentTransaction = supportFragmentManager.beginTransaction()
-
-        ft.replace(R.id.view_finder_placeholder, ViewFinderFragment(getCameraId(this, CameraCharacteristics.LENS_FACING_BACK)))
-        ft.commit()
+        if (savedInstanceState == null) {
+            val ft: FragmentTransaction = supportFragmentManager.beginTransaction()
+            ft.replace(R.id.view_finder_placeholder, ViewFinderFragment())
+            ft.commit()
+        }
 
         if (!hasPermissions(this)) {
             requestPermissions(
                 PERMISSIONS_REQUIRED,
                 PERMISSIONS_REQUEST_CODE
             )
-        }
-    }
-
-    private fun getCameraId(context: Context, facing: Int): String {
-        val manager = context.getSystemService(CAMERA_SERVICE) as CameraManager
-
-        return manager.cameraIdList.first {
-            manager
-                .getCameraCharacteristics(it)
-                .get(CameraCharacteristics.LENS_FACING) == facing
         }
     }
 

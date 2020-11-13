@@ -24,6 +24,7 @@ import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.drawable.toDrawable
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -51,8 +52,9 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
-class ViewFinderFragment(private val cameraId: String) : Fragment() {
+class ViewFinderFragment() : Fragment() {
 
+    private lateinit var cameraId: String
     /** Detects, characterizes, and connects to a CameraDevice (used for all camera operations) */
     private val cameraManager: CameraManager by lazy {
         val context = requireContext().applicationContext
@@ -113,15 +115,25 @@ class ViewFinderFragment(private val cameraId: String) : Fragment() {
         savedInstanceState: Bundle?
     ): View? = inflater.inflate(R.layout.view_finder, container, false)
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        cameraId = context?.let { getCameraId(it, CameraCharacteristics.LENS_FACING_BACK) }!!
+    }
+
+    private fun getCameraId(context: Context, facing: Int): String {
+        val manager = context.getSystemService(AppCompatActivity.CAMERA_SERVICE) as CameraManager
+
+        return manager.cameraIdList.first {
+            manager
+                .getCameraCharacteristics(it)
+                .get(CameraCharacteristics.LENS_FACING) == facing
+        }
+    }
+
     @SuppressLint("MissingPermission")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         viewFinder = view.findViewById(R.id.view_finder)
-//        capture_button.setOnApplyWindowInsetsListener { v, insets ->
-//            v.translationX = (-insets.systemWindowInsetRight).toFloat()
-//            v.translationY = (-insets.systemWindowInsetBottom).toFloat()
-//            insets.consumeSystemWindowInsets()
-//        }
 
         viewFinder.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceDestroyed(holder: SurfaceHolder) = Unit
@@ -287,7 +299,7 @@ class ViewFinderFragment(private val cameraId: String) : Fragment() {
     }
 
     companion object {
-        private val TAG = ViewFinderFragment::class.java.simpleName
+        val TAG = ViewFinderFragment::class.java.simpleName
 
         /** Maximum number of images that will be held in the reader's buffer */
         private const val IMAGE_BUFFER_SIZE: Int = 3
