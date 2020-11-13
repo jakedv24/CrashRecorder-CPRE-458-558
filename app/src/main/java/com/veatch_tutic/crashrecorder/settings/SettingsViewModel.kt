@@ -7,11 +7,24 @@ import androidx.lifecycle.ViewModel
 
 class SettingsViewModel(private val sharedPreferences: SharedPreferences) : ViewModel() {
     private val videoLengthSettingKey = "VIDEO_LENGTH_SETTING_KEY"
+    private val defaultVideoLength = 30
 
     private val videoLengthSetting = MutableLiveData<Int>()
+    private var videoLengthSettingSaved: Int = 0
 
     init {
         getSettingsFromSharedPreferences()
+    }
+
+    fun applyChanges() {
+        with(sharedPreferences.edit()) {
+            putInt(videoLengthSettingKey, videoLengthSetting.value ?: defaultVideoLength)
+            apply()
+        }
+    }
+
+    fun cancelChanges() {
+        videoLengthSetting.value = videoLengthSettingSaved
     }
 
     fun getVideoLengthSetting(): LiveData<Int> {
@@ -20,14 +33,10 @@ class SettingsViewModel(private val sharedPreferences: SharedPreferences) : View
 
     fun videoLengthSettingChanged(newVal: Int) {
         videoLengthSetting.value = newVal
-
-        with(sharedPreferences.edit()) {
-            putInt(videoLengthSettingKey, newVal)
-            apply()
-        }
     }
 
     private fun getSettingsFromSharedPreferences() {
-        videoLengthSetting.value = sharedPreferences.getInt(videoLengthSettingKey, 30)
+        videoLengthSetting.value = sharedPreferences.getInt(videoLengthSettingKey, defaultVideoLength)
+        videoLengthSettingSaved = sharedPreferences.getInt(videoLengthSettingKey, defaultVideoLength)
     }
 }
