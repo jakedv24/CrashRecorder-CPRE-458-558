@@ -6,6 +6,11 @@ import android.content.pm.PackageManager
 import android.hardware.SensorManager
 import android.os.Bundle
 import android.os.Handler
+<<<<<<< HEAD
+=======
+import android.view.View
+import android.widget.Toast
+>>>>>>> e899bb7cdedf087032975a2f9fdbc6bfa6f19f50
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentTransaction
@@ -27,14 +32,24 @@ class MainActivity : AppCompatActivity() {
 
         val videoThreadReadyCallback = object : VideoStreamingThreadReadyCallback {
             override fun onRunning(handler: Handler) {
-                // when video thread has started and init, start gyro thread and pass in message handler
+                // when video thread has started and init, start accel thread and pass in message handler
                 val accelerometerThread = AccelerometerThread(handler, sensorService)
                 accelerometerThread.start()
             }
         }
 
         // start video thread
-        val videoStreamingThread = VideoStreamingThread(videoThreadReadyCallback)
+        val sensorEventCallback = object : VideoStreamingThread.AccelerometerDetectionCallback {
+            override fun onSensorValueReceived() {
+                Toast.makeText(application, "Crash detected.", Toast.LENGTH_LONG)
+                    .show()
+            }
+        }
+
+        val videoStreamingThread = VideoStreamingThread(videoThreadReadyCallback,
+            sensorEventCallback
+        )
+
         videoStreamingThread.start()
 
         if (savedInstanceState == null) {
