@@ -11,6 +11,7 @@ import android.media.MediaScannerConnection
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
+import android.os.Looper
 import android.util.Log
 import android.util.Range
 import android.view.*
@@ -25,12 +26,16 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.veatch_tutic.crashrecorder.BuildConfig
 import com.veatch_tutic.crashrecorder.MainActivity
 import com.veatch_tutic.crashrecorder.R
+import com.veatch_tutic.crashrecorder.settings.SettingsFragment
+import com.veatch_tutic.crashrecorder.settings.SettingsViewModel
 import com.veatch_tutic.crashrecorder.utils.AutoFitSurfaceView
 import com.veatch_tutic.crashrecorder.utils.OrientationLiveData
 import com.veatch_tutic.crashrecorder.utils.getPreviewOutputSize
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import java.io.File
-import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.coroutines.resume
@@ -39,6 +44,7 @@ import kotlin.coroutines.suspendCoroutine
 
 class ViewFinderFragment : Fragment() {
     private lateinit var cameraId: String
+
     /** Detects, characterizes, and connects to a CameraDevice (used for all camera operations) */
     private val cameraManager: CameraManager by lazy {
         val context = requireContext().applicationContext
@@ -95,6 +101,9 @@ class ViewFinderFragment : Fragment() {
 
     /** Fab that controls stopping recording*/
     private lateinit var stopRecord: FloatingActionButton
+
+    /** Fab controlling opening of the settings */
+    private lateinit var settingsFAB: FloatingActionButton
 
     /** Captures frames from a [CameraDevice] for our video recording */
     private lateinit var session: CameraCaptureSession
@@ -158,6 +167,7 @@ class ViewFinderFragment : Fragment() {
         startRecording = view.findViewById(R.id.start_recording)
         stopRecord = view.findViewById(R.id.stop_recording)
         dateTextView = view.findViewById(R.id.date_view)
+        settingsFAB = view.findViewById(R.id.settings_button)
 
         viewFinder.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceDestroyed(holder: SurfaceHolder) = Unit
@@ -165,13 +175,15 @@ class ViewFinderFragment : Fragment() {
                 holder: SurfaceHolder,
                 format: Int,
                 width: Int,
-                height: Int) = Unit
+                height: Int
+            ) = Unit
 
             override fun surfaceCreated(holder: SurfaceHolder) {
 
                 // Selects appropriate preview size and configures view finder
                 val previewSize = getPreviewOutputSize(
-                    viewFinder.display, characteristics, SurfaceHolder::class.java)
+                    viewFinder.display, characteristics, SurfaceHolder::class.java
+                )
                 Log.d(TAG, "View finder size: ${viewFinder.width} x ${viewFinder.height}")
                 Log.d(TAG, "Selected preview size: $previewSize")
                 viewFinder.setAspectRatio(previewSize.width, previewSize.height)
@@ -183,9 +195,14 @@ class ViewFinderFragment : Fragment() {
 
         // Used to rotate the output media to match device orientation
         relativeOrientation = OrientationLiveData(requireContext(), characteristics).apply {
-            observe(viewLifecycleOwner, Observer {
-                    orientation -> Log.d(TAG, "Orientation changed: $orientation")
+            observe(viewLifecycleOwner, Observer { orientation ->
+                Log.d(TAG, "Orientation changed: $orientation")
             })
+        }
+
+        settingsFAB.setOnClickListener {
+            val fragmentTransaction = requireFragmentManager().beginTransaction()
+            SettingsFragment().show(fragmentTransaction, null)
         }
     }
 
@@ -193,7 +210,8 @@ class ViewFinderFragment : Fragment() {
     private fun createRecorder(surface: Surface) = MediaRecorder().apply {
         currentOutputFile = outputFile
         val previewSize = getPreviewOutputSize(
-            viewFinder.display, characteristics, SurfaceHolder::class.java)
+            viewFinder.display, characteristics, SurfaceHolder::class.java
+        )
 
         setAudioSource(MediaRecorder.AudioSource.MIC)
         setVideoSource(MediaRecorder.VideoSource.SURFACE)
@@ -244,6 +262,34 @@ class ViewFinderFragment : Fragment() {
     }
 
     private fun startRecording() {
+        val sharedPrefs = requireActivity().getSharedPreferences(
+            getString(R.string.app_name),
+            Context.MODE_PRIVATE
+        )
+        val lengthOfVideoSeconds = sharedPrefs.getInt(
+            SettingsViewModel.videoLengthSettingKey,
+            SettingsViewModel.defaultVideoLength
+        )
+
+        recordingStartMillis = System.currentTimeMillis()
+
+        val handler = Handler(Looper.getMainLooper())
+
+        startSystemRecording()
+        handler.post(object : Runnable {
+            override fun run() {
+                if ((System.currentTimeMillis() - recordingStartMillis) / 1000 >= lengthOfVideoSeconds) {
+                    System.out.println("TIMER - Chunking")
+                    resetRecording(handler, this)
+                    recordingStartMillis = System.currentTimeMillis()
+                }
+
+                handler.postDelayed(this, 5000)
+            }
+        })
+    }
+
+    private fun startSystemRecording() {
         lifecycleScope.launch(Dispatchers.IO) {
 
             // Prevents screen rotation during the video recording
@@ -261,11 +307,31 @@ class ViewFinderFragment : Fragment() {
                 prepare()
                 start()
             }
-            recordingStartMillis = System.currentTimeMillis()
             Log.d(TAG, "Recording started")
 
             //TODO: Starts recording animation
             //overlay.post(animationTask)
+        }
+    }
+
+    private fun resetRecording(handler: Handler, runnable: Runnable) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                recorder.stop()
+                Log.d(TAG, "Recording stopped")
+                recorder = createRecorder(recorderSurface)
+
+                // Finalizes recorder setup and starts recording
+                recorder.apply {
+                    // Sets output orientation based on current sensor value at start time
+                    relativeOrientation.value?.let { it1 -> setOrientationHint(it1) }
+                    prepare()
+                    start()
+                }
+                Log.d(TAG, "Recording started")
+            } catch (e: IllegalStateException) {
+                handler.removeCallbacks(runnable)
+            }
         }
     }
 
@@ -275,18 +341,13 @@ class ViewFinderFragment : Fragment() {
             requireActivity().requestedOrientation =
                 ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
 
-            // Requires recording of at least MIN_REQUIRED_RECORDING_TIME_MILLIS
-            val elapsedTimeMillis = System.currentTimeMillis() - recordingStartMillis
-            if (elapsedTimeMillis < MIN_REQUIRED_RECORDING_TIME_MILLIS) {
-                delay(MIN_REQUIRED_RECORDING_TIME_MILLIS - elapsedTimeMillis)
-            }
-
             Log.d(TAG, "Recording stopped. Output file: $currentOutputFile")
-            recorder.stop()
 
-            // Removes recording animation
-            //TODO: Handle stop recording
-            //overlay.removeCallbacks(animationTask)
+            try {
+                recorder.stop()
+            } catch (e: java.lang.IllegalStateException) {
+                // no-op handler already stopped recording
+            }
 
             // Broadcasts the media file to the rest of the system
             MediaScannerConnection.scanFile(
@@ -331,7 +392,7 @@ class ViewFinderFragment : Fragment() {
             }
 
             override fun onError(device: CameraDevice, error: Int) {
-                val msg = when(error) {
+                val msg = when (error) {
                     ERROR_CAMERA_DEVICE -> "Fatal (device)"
                     ERROR_CAMERA_DISABLED -> "Device policy"
                     ERROR_CAMERA_IN_USE -> "Camera in use"
@@ -358,7 +419,7 @@ class ViewFinderFragment : Fragment() {
 
         // Creates a capture session using the predefined targets, and defines a session state
         // callback which resumes the coroutine once the session is configured
-        device.createCaptureSession(targets, object: CameraCaptureSession.StateCallback() {
+        device.createCaptureSession(targets, object : CameraCaptureSession.StateCallback() {
 
             override fun onConfigured(session: CameraCaptureSession) = cont.resume(session)
 

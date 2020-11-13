@@ -6,15 +6,14 @@ import android.content.pm.PackageManager
 import android.hardware.SensorManager
 import android.os.Bundle
 import android.os.Handler
-import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentTransaction
 import com.veatch_tutic.crashrecorder.accelerometer.AccelerometerThread
-import com.veatch_tutic.crashrecorder.video_streaming.ViewFinderFragment
 import com.veatch_tutic.crashrecorder.video_streaming.VideoStreamingThread
 import com.veatch_tutic.crashrecorder.video_streaming.VideoStreamingThread.VideoStreamingThreadReadyCallback
+import com.veatch_tutic.crashrecorder.video_streaming.ViewFinderFragment
 
 private const val PERMISSIONS_REQUEST_CODE = 10
 private val PERMISSIONS_REQUIRED = arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)

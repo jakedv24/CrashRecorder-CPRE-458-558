@@ -1,4 +1,9 @@
 <resources>
     <string name="app_name">CrashRecorder</string>
     <string name="speed_65_mph">Speed: 65 mph</string>
+    <string name="settings">Settings</string>
+    <string name="saved_video_length">Saved Video Length: %d seconds</string>
+    <string name="cancel">Cancel</string>
+    <string name="apply">Apply</string>
+    <string name="user_id">User ID</string>
 </resources>
