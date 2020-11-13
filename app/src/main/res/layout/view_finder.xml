@@ -33,17 +33,35 @@
             android:layout_height="wrap_content"
             android:textColor="@color/white"
             android:textSize="12sp"
+            android:id="@+id/date_view"
             android:hint="Current Time: Jun 01, 2020 18:00"/>
     </LinearLayout>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:layout_marginBottom="24dp"
+        android:id="@+id/start_recording"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/ic_baseline_not_started_24"
+        app:fabSize="normal"
+        app:fabCustomSize="72dp"
+        app:maxImageSize="64dp"
+        />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:layout_marginBottom="24dp"
+        android:id="@+id/stop_recording"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_baseline_stop_circle_48"
         app:fabSize="normal"
         app:fabCustomSize="72dp"
         app:maxImageSize="64dp"

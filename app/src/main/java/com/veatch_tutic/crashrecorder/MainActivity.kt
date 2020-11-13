@@ -4,8 +4,6 @@ import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
 import android.hardware.SensorManager
-import android.hardware.camera2.CameraCharacteristics
-import android.hardware.camera2.CameraManager
 import android.os.Bundle
 import android.os.Handler
 import android.view.View
@@ -13,12 +11,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentTransaction
 import com.veatch_tutic.crashrecorder.accelerometer.AccelerometerThread
+import com.veatch_tutic.crashrecorder.video_streaming.ViewFinderFragment
 import com.veatch_tutic.crashrecorder.video_streaming.VideoStreamingThread
 import com.veatch_tutic.crashrecorder.video_streaming.VideoStreamingThread.VideoStreamingThreadReadyCallback
-import com.veatch_tutic.crashrecorder.video_streaming.ViewFinderFragment
 
 private const val PERMISSIONS_REQUEST_CODE = 10
-private val PERMISSIONS_REQUIRED = arrayOf(Manifest.permission.CAMERA)
+private val PERMISSIONS_REQUIRED = arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)
 
 class MainActivity : AppCompatActivity() {
 
@@ -68,16 +66,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
-        const val FLAGS_FULLSCREEN =
-            View.SYSTEM_UI_FLAG_LOW_PROFILE or
-                    View.SYSTEM_UI_FLAG_FULLSCREEN or
-                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-
-        const val ANIMATION_FAST_MILLIS = 50L
         const val ANIMATION_SLOW_MILLIS = 100L
-        private const val IMMERSIVE_FLAG_TIMEOUT = 500L
-
         fun hasPermissions(context: Context) = PERMISSIONS_REQUIRED.all {
             ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
         }
