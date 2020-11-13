@@ -3,7 +3,7 @@ package com.veatch_tutic.crashrecorder.video_streaming
 import android.os.Handler
 import android.os.Looper
 
-class VideoStreamingThread(private val threadReadyCallback: VideoStreamingThreadReadyCallback?) : Thread() {
+class VideoStreamingThread(private val threadReadyCallback: VideoStreamingThreadReadyCallback?, private val sensorEventCallback: AccelerometerDetectionCallback?) : Thread() {
     companion object {
         val MESSAGE_CODE = 0
     }
@@ -16,6 +16,7 @@ class VideoStreamingThread(private val threadReadyCallback: VideoStreamingThread
         messageHandler = Handler {
             // handle message, will use this to
             System.out.println("received message")
+            sensorEventCallback?.onSensorValueReceived()
             true
         }
 
@@ -32,5 +33,9 @@ class VideoStreamingThread(private val threadReadyCallback: VideoStreamingThread
 
     interface VideoStreamingThreadReadyCallback {
         fun onRunning(handler: Handler)
+    }
+
+    interface AccelerometerDetectionCallback {
+        fun onSensorValueReceived()
     }
 }
