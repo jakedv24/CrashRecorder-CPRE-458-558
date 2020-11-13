@@ -19,6 +19,7 @@ class SettingsFragment : FullScreenBottomSheetDialogFragment() {
     private lateinit var videoLengthControl: SeekBar
     private lateinit var applyButton: MaterialButton
     private lateinit var cancelButton: MaterialButton
+    private lateinit var userIdTextView: TextView
 
     private lateinit var settingsViewModel: SettingsViewModel
 
@@ -38,6 +39,9 @@ class SettingsFragment : FullScreenBottomSheetDialogFragment() {
         videoLengthLabel = view.findViewById(R.id.video_length_label)
         applyButton = view.findViewById(R.id.apply_button)
         cancelButton = view.findViewById(R.id.cancel_button)
+        userIdTextView = view.findViewById(R.id.user_id)
+
+        userIdTextView.text = settingsViewModel.getUserId()
 
         applyButton.setOnClickListener {
             settingsViewModel.applyChanges()

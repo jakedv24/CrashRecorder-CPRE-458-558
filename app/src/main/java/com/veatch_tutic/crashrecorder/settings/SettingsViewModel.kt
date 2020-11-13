@@ -4,8 +4,10 @@ import android.content.SharedPreferences
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import java.util.*
 
 class SettingsViewModel(private val sharedPreferences: SharedPreferences) : ViewModel() {
+    private val userIDKey = "USER_ID_KEY"
     private val videoLengthSettingKey = "VIDEO_LENGTH_SETTING_KEY"
     private val defaultVideoLength = 30
 
@@ -36,7 +38,24 @@ class SettingsViewModel(private val sharedPreferences: SharedPreferences) : View
     }
 
     private fun getSettingsFromSharedPreferences() {
-        videoLengthSetting.value = sharedPreferences.getInt(videoLengthSettingKey, defaultVideoLength)
-        videoLengthSettingSaved = sharedPreferences.getInt(videoLengthSettingKey, defaultVideoLength)
+        videoLengthSetting.value =
+            sharedPreferences.getInt(videoLengthSettingKey, defaultVideoLength)
+        videoLengthSettingSaved =
+            sharedPreferences.getInt(videoLengthSettingKey, defaultVideoLength)
+    }
+
+    fun getUserId(): String {
+        return if (sharedPreferences.contains(userIDKey)) {
+            sharedPreferences.getString(userIDKey, "") ?: ""
+        } else {
+            val newId = UUID.randomUUID().toString()
+
+            with(sharedPreferences.edit()) {
+                putString(userIDKey, newId)
+                apply()
+            }
+
+            newId
+        }
     }
 }
