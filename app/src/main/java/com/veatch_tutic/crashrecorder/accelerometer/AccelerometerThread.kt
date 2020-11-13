@@ -13,7 +13,7 @@ class AccelerometerThread(
     private val messageHandler: Handler,
     private val sensorManager: SensorManager
 ) : Thread(), SensorEventListener {
-    val CRASH_DETECTION_THRESHOLD = 16
+    val CRASH_DETECTION_THRESHOLD = 25
 
     override fun run() {
         System.out.println("Accelerometer Thread running")

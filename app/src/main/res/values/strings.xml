@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">CrashRecorder</string>
+    <string name="speed_65_mph">Speed: 65 mph</string>
 </resources>
