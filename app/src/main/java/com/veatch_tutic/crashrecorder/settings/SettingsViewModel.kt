@@ -7,9 +7,11 @@ import androidx.lifecycle.ViewModel
 import java.util.*
 
 class SettingsViewModel(private val sharedPreferences: SharedPreferences) : ViewModel() {
-    private val userIDKey = "USER_ID_KEY"
-    private val videoLengthSettingKey = "VIDEO_LENGTH_SETTING_KEY"
-    private val defaultVideoLength = 30
+    companion object {
+        val userIDKey = "USER_ID_KEY"
+        val videoLengthSettingKey = "VIDEO_LENGTH_SETTING_KEY"
+        val defaultVideoLength = 5
+    }
 
     private val videoLengthSetting = MutableLiveData<Int>()
     private var videoLengthSettingSaved: Int = 0

@@ -31,7 +31,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
         android:max="240"
-        android:min="30"
+        android:min="5"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/video_length_label" />

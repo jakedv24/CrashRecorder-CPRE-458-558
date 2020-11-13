@@ -6,11 +6,7 @@ import android.content.pm.PackageManager
 import android.hardware.SensorManager
 import android.os.Bundle
 import android.os.Handler
-<<<<<<< HEAD
-=======
-import android.view.View
 import android.widget.Toast
->>>>>>> e899bb7cdedf087032975a2f9fdbc6bfa6f19f50
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentTransaction
