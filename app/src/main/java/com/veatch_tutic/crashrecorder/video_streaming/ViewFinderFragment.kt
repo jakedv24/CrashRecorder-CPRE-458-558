@@ -31,7 +31,6 @@ import com.veatch_tutic.crashrecorder.utils.OrientationLiveData
 import com.veatch_tutic.crashrecorder.utils.getPreviewOutputSize
 import kotlinx.coroutines.*
 import java.io.File
-import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.coroutines.resume
@@ -243,6 +242,7 @@ class ViewFinderFragment : Fragment() {
         startRecording.setOnClickListener {
             startRecording.visibility = View.GONE
             stopRecord.visibility = View.VISIBLE
+            
             lifecycleScope.launch(Dispatchers.IO) {
 
                 // Prevents screen rotation during the video recording

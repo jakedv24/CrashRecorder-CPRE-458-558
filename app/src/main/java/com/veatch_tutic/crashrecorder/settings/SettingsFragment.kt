@@ -2,8 +2,6 @@ package com.veatch_tutic.crashrecorder.settings
 
 import android.content.Context
 import android.os.Bundle
-import android.provider.Settings
-import android.service.autofill.TextValueSanitizer
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
