@@ -25,6 +25,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.veatch_tutic.crashrecorder.BuildConfig
 import com.veatch_tutic.crashrecorder.MainActivity
 import com.veatch_tutic.crashrecorder.R
+import com.veatch_tutic.crashrecorder.settings.SettingsFragment
 import com.veatch_tutic.crashrecorder.utils.AutoFitSurfaceView
 import com.veatch_tutic.crashrecorder.utils.OrientationLiveData
 import com.veatch_tutic.crashrecorder.utils.getPreviewOutputSize
@@ -96,6 +97,9 @@ class ViewFinderFragment : Fragment() {
     /** Fab that controls stopping recording*/
     private lateinit var stopRecord: FloatingActionButton
 
+    /** Fab controlling opening of the settings */
+    private lateinit var settingsFAB: FloatingActionButton
+
     /** Captures frames from a [CameraDevice] for our video recording */
     private lateinit var session: CameraCaptureSession
 
@@ -158,6 +162,7 @@ class ViewFinderFragment : Fragment() {
         startRecording = view.findViewById(R.id.start_recording)
         stopRecord = view.findViewById(R.id.stop_recording)
         dateTextView = view.findViewById(R.id.date_view)
+        settingsFAB = view.findViewById(R.id.settings_button)
 
         viewFinder.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceDestroyed(holder: SurfaceHolder) = Unit
@@ -186,6 +191,11 @@ class ViewFinderFragment : Fragment() {
             observe(viewLifecycleOwner, Observer {
                     orientation -> Log.d(TAG, "Orientation changed: $orientation")
             })
+        }
+
+        settingsFAB.setOnClickListener {
+            val fragmentTransaction = requireFragmentManager().beginTransaction()
+            SettingsFragment().show(fragmentTransaction, null)
         }
     }
 
