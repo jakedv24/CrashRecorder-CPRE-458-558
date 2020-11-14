@@ -26,32 +26,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val sensorService = this.applicationContext.getSystemService(Context.SENSOR_SERVICE) as SensorManager
-
-        val videoThreadReadyCallback = object : VideoStreamingThreadReadyCallback {
-            override fun onRunning(handler: Handler) {
-                // when video thread has started and init, start accel thread and pass in message handler
-                val accelerometerThread = AccelerometerThread(handler, sensorService)
-                accelerometerThread.start()
-            }
-        }
-
-        // start video thread
-        val sensorEventCallback = object : VideoStreamingThread.AccelerometerDetectionCallback {
-            override fun onSensorValueReceived() {
-                Toast.makeText(application, "Crash detected.", Toast.LENGTH_LONG)
-                    .show()
-                val sp = application.getSharedPreferences(getString(R.string.app_name), Context.MODE_PRIVATE);
-                sendSMS(sp.getString(SettingsViewModel.emergencyNumberKey, ""))
-            }
-        }
-
-        val videoStreamingThread = VideoStreamingThread(videoThreadReadyCallback,
-            sensorEventCallback
-        )
-
-        videoStreamingThread.start()
-
         if (savedInstanceState == null) {
             val ft: FragmentTransaction = supportFragmentManager.beginTransaction()
             ft.replace(R.id.view_finder_placeholder, ViewFinderFragment())
@@ -63,19 +37,6 @@ class MainActivity : AppCompatActivity() {
                 PERMISSIONS_REQUIRED,
                 PERMISSIONS_REQUEST_CODE
             )
-        }
-    }
-
-    fun sendSMS(phoneNo: String?) {
-        try {
-            val msg = "CrashCam App: I may have crashed!"
-            val smsManager: SmsManager = SmsManager.getDefault()
-            smsManager.sendTextMessage(phoneNo, null, msg, null, null)
-        } catch (ex: Exception) {
-            Toast.makeText(
-                applicationContext, ex.message.toString(),
-                Toast.LENGTH_LONG
-            ).show()
         }
     }
 
