@@ -10,11 +10,14 @@ class SettingsViewModel(private val sharedPreferences: SharedPreferences) : View
     companion object {
         val userIDKey = "USER_ID_KEY"
         val videoLengthSettingKey = "VIDEO_LENGTH_SETTING_KEY"
+        val emergencyNumberKey = "EMERGENCY_NUMBER_KEY"
         val defaultVideoLength = 5
     }
 
     private val videoLengthSetting = MutableLiveData<Int>()
+    private val emergencyNumber = MutableLiveData<String>()
     private var videoLengthSettingSaved: Int = 0
+    private var emergencyNumberSaved: String = ""
 
     init {
         getSettingsFromSharedPreferences()
@@ -23,6 +26,7 @@ class SettingsViewModel(private val sharedPreferences: SharedPreferences) : View
     fun applyChanges() {
         with(sharedPreferences.edit()) {
             putInt(videoLengthSettingKey, videoLengthSetting.value ?: defaultVideoLength)
+            putString(emergencyNumberKey, emergencyNumber.value ?: "")
             apply()
         }
     }
@@ -39,11 +43,19 @@ class SettingsViewModel(private val sharedPreferences: SharedPreferences) : View
         videoLengthSetting.value = newVal
     }
 
+    fun updateEmergencyContact(newContact: String) {
+        emergencyNumber.value = newContact
+    }
+
     private fun getSettingsFromSharedPreferences() {
         videoLengthSetting.value =
             sharedPreferences.getInt(videoLengthSettingKey, defaultVideoLength)
         videoLengthSettingSaved =
             sharedPreferences.getInt(videoLengthSettingKey, defaultVideoLength)
+        emergencyNumber.value =
+            sharedPreferences.getString(emergencyNumberKey, "")
+        emergencyNumberSaved =
+            sharedPreferences.getString(emergencyNumberKey, "")!!
     }
 
     fun getUserId(): String {
@@ -59,5 +71,9 @@ class SettingsViewModel(private val sharedPreferences: SharedPreferences) : View
 
             newId
         }
+    }
+
+    fun getEmergencyContact(): MutableLiveData<String> {
+        return emergencyNumber
     }
 }

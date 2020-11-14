@@ -6,17 +6,19 @@ import android.content.pm.PackageManager
 import android.hardware.SensorManager
 import android.os.Bundle
 import android.os.Handler
+import android.telephony.SmsManager
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentTransaction
 import com.veatch_tutic.crashrecorder.accelerometer.AccelerometerThread
+import com.veatch_tutic.crashrecorder.settings.SettingsViewModel
 import com.veatch_tutic.crashrecorder.video_streaming.VideoStreamingThread
 import com.veatch_tutic.crashrecorder.video_streaming.VideoStreamingThread.VideoStreamingThreadReadyCallback
 import com.veatch_tutic.crashrecorder.video_streaming.ViewFinderFragment
 
 private const val PERMISSIONS_REQUEST_CODE = 10
-private val PERMISSIONS_REQUIRED = arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)
+private val PERMISSIONS_REQUIRED = arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO, Manifest.permission.SEND_SMS)
 
 class MainActivity : AppCompatActivity() {
 
@@ -39,6 +41,8 @@ class MainActivity : AppCompatActivity() {
             override fun onSensorValueReceived() {
                 Toast.makeText(application, "Crash detected.", Toast.LENGTH_LONG)
                     .show()
+                val sp = application.getSharedPreferences(getString(R.string.app_name), Context.MODE_PRIVATE);
+                sendSMS(sp.getString(SettingsViewModel.emergencyNumberKey, ""))
             }
         }
 
@@ -59,6 +63,19 @@ class MainActivity : AppCompatActivity() {
                 PERMISSIONS_REQUIRED,
                 PERMISSIONS_REQUEST_CODE
             )
+        }
+    }
+
+    fun sendSMS(phoneNo: String?) {
+        try {
+            val msg = "CrashCam App: I may have crashed!"
+            val smsManager: SmsManager = SmsManager.getDefault()
+            smsManager.sendTextMessage(phoneNo, null, msg, null, null)
+        } catch (ex: Exception) {
+            Toast.makeText(
+                applicationContext, ex.message.toString(),
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 
