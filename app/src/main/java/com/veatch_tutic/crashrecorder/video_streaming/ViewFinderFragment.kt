@@ -393,8 +393,6 @@ class ViewFinderFragment : Fragment() {
     private fun stopRecordingAndShowVideo() {
         lifecycleScope.launch(Dispatchers.IO) {
             // Unlocks screen rotation after recording finished
-            requireActivity().requestedOrientation =
-                ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
 
             Log.d(TAG, "Recording stopped. Output file: $currentOutputFile")
 
@@ -428,6 +426,8 @@ class ViewFinderFragment : Fragment() {
 
             // Finishes our current camera screen
             delay(MainActivity.ANIMATION_SLOW_MILLIS)
+            requireActivity().requestedOrientation =
+                ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
         }
     }
 
