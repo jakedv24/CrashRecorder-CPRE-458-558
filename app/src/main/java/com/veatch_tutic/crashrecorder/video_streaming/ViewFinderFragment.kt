@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.hardware.SensorManager
 import android.hardware.camera2.*
 import android.media.MediaCodec
 import android.media.MediaRecorder
@@ -12,11 +13,13 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
+import android.telephony.SmsManager
 import android.util.Log
 import android.util.Range
 import android.view.*
 import android.webkit.MimeTypeMap
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
@@ -26,6 +29,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.veatch_tutic.crashrecorder.BuildConfig
 import com.veatch_tutic.crashrecorder.MainActivity
 import com.veatch_tutic.crashrecorder.R
+import com.veatch_tutic.crashrecorder.accelerometer.AccelerometerThread
 import com.veatch_tutic.crashrecorder.settings.SettingsFragment
 import com.veatch_tutic.crashrecorder.settings.SettingsViewModel
 import com.veatch_tutic.crashrecorder.utils.AutoFitSurfaceView
@@ -148,6 +152,57 @@ class ViewFinderFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         cameraId = context?.let { getCameraId(it, CameraCharacteristics.LENS_FACING_BACK) }!!
+
+        val sensorService =
+            this.requireActivity().application.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+
+        val videoThreadReadyCallback = object :
+            VideoStreamingThread.VideoStreamingThreadReadyCallback {
+            override fun onRunning(handler: Handler) {
+                // when video thread has started and init, start accel thread and pass in message handler
+                val accelerometerThread = AccelerometerThread(handler, sensorService)
+                accelerometerThread.start()
+            }
+        }
+
+        // start video thread
+        val sensorEventCallback = object : VideoStreamingThread.AccelerometerDetectionCallback {
+            override fun onSensorValueReceived() {
+                Toast.makeText(requireContext(), "Crash detected.", Toast.LENGTH_LONG)
+                    .show()
+                val sp = requireActivity().application.getSharedPreferences(
+                    getString(R.string.app_name),
+                    Context.MODE_PRIVATE
+                );
+                val emergencyContact = sp.getString(SettingsViewModel.emergencyNumberKey, "")
+
+                if (emergencyContact?.isNotEmpty() == true) {
+                    sendSMS(emergencyContact)
+                }
+
+                stopRecordingAndShowVideo()
+            }
+        }
+
+        val videoStreamingThread = VideoStreamingThread(
+            videoThreadReadyCallback,
+            sensorEventCallback
+        )
+
+        videoStreamingThread.start()
+    }
+
+    fun sendSMS(phoneNo: String?) {
+        try {
+            val msg = "CrashCam App: I may have crashed!"
+            val smsManager: SmsManager = SmsManager.getDefault()
+            smsManager.sendTextMessage(phoneNo, null, msg, null, null)
+        } catch (ex: Exception) {
+            Toast.makeText(
+                requireContext(), ex.message.toString(),
+                Toast.LENGTH_LONG
+            ).show()
+        }
     }
 
     private fun getCameraId(context: Context, facing: Int): String {
